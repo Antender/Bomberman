@@ -23,6 +23,7 @@ public class Grid : MonoBehaviour
     GameObject[][] tiles;
     Sprite[] spritesheet;
 
+
     void Start()
     {
         self = GameObject.Find("Canvas");
@@ -45,7 +46,8 @@ public class Grid : MonoBehaviour
         rt.localPosition = new Vector3(x * tileWidth, y * tileHeight);
         tile.GetComponent<Button>().onClick.AddListener(() =>
         {
-            model.Clicked(x, y);
+            SetTile(x, y, SpriteType.BIGBOMB);
+            model.PlaceBomb(x, y);
         });
         tiles[x][y] = tile;
         SetTile(x, y, SpriteType.SPACE);
@@ -72,3 +74,4 @@ public class Grid : MonoBehaviour
 
     }
 }
+
