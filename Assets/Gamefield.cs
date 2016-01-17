@@ -77,7 +77,7 @@ public class Gamefield : MonoBehaviour
     {
         int x = Random.Range(0, width - 1);
         int y;
-        if (heroPosition.x % 2 == 0)
+        if (x % 2 == 0)
         {
             y = Random.Range(0, height);
         }
