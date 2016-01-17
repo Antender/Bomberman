@@ -8,9 +8,10 @@ public enum ObjectType
 
 public class Gamefield : MonoBehaviour
 {
-
+    bool init = false;
     const int width = 9;
     const int height = 9;
+    const int wallcount = 60;
     GameObject self;
     Grid view;
 
@@ -30,6 +31,35 @@ public class Gamefield : MonoBehaviour
         }
         bomblist = new Dictionary<Point, BombState>();
         expllist = new Dictionary<Point, ExplosionState>();
+        GenerateField();
+    }
+
+    void GenerateField()
+    {
+        List<int> pos = new List<int>(width*height);
+        for (int i = 0; i < width* height; i++)
+        {
+            pos.Add(i);
+        }
+        for (int i = wallcount; i > 0 ; i--)
+        {
+            int index = (int)(Random.value * pos.Count);
+            if (index!= i)
+            {
+                int x = index % width;
+                int y = index / width;
+                field[index % width][index / width] = ObjectType.BRICKWALL;
+                view.SetTile(x, y, SpriteType.BRICKWALL);
+            } 
+        }
+        for (int i = 2; i < width; i+=2)
+        {
+            for (int j = 2; j < height; j += 2)
+            {
+                field[i][j] = ObjectType.WALL;
+                view.SetTile(i, j, SpriteType.WALL);
+            }
+        }
     }
 
     void Explode(int x, int y, int force)
@@ -86,11 +116,11 @@ public class Gamefield : MonoBehaviour
                     }
                     break;
             }
-        }
-        force -= 1;
-        if (force > 0)
-        {
-            Explode(x, y, xdelta, ydelta, force);
+            force -= 1;
+            if (force > 0)
+            {
+                Explode(x, y, xdelta, ydelta, force);
+            }
         }
     }
 
@@ -119,18 +149,24 @@ public class Gamefield : MonoBehaviour
                 }
             }
         }
+        List<Point> removal = new List<Point>();
         foreach (var pos in bomblist.Keys)
         {
             var point = new Point(pos.x, pos.y);
             if (bomblist[point].exploded)
             {
-                bomblist.Remove(point);
+                removal.Add(point);
             }
+        }
+        foreach(Point p in removal)
+        {
+            bomblist.Remove(p);
         }
     }
 
     void UpdateExplosions(float time)
     {
+        List<Point> removal = new List<Point>();
         foreach (var pos in expllist.Keys)
         {
             ExplosionState state = expllist[pos];
@@ -139,15 +175,23 @@ public class Gamefield : MonoBehaviour
             {
                 field[pos.x][pos.y] = ObjectType.SPACE;
                 view.SetTile(pos.x, pos.y, SpriteType.SPACE);
-                expllist.Remove(pos);
+                removal.Add(pos);
             }
+        }
+        foreach (Point p in removal)
+        {
+            expllist.Remove(p);
         }
     }
 
     public void PlaceBomb(int x, int y)
     {
-        field[x][y] = ObjectType.BOMB;
-        bomblist[new Point(x, y)] = new BombState();
+        if (field[x][y] == ObjectType.SPACE)
+        {
+            field[x][y] = ObjectType.BOMB;
+            bomblist[new Point(x, y)] = new BombState();
+            view.SetTile(x, y, SpriteType.BIGBOMB);
+        }
     }
 
     void Update()

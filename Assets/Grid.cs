@@ -5,7 +5,7 @@ public enum SpriteType
 {
     WALL, SPACE, BRICKWALL, PERSON,
     BIGBOMB, SMALLBOMB,
-    EXPL_CENTER, EXPL_LEFT, EXPL_UP, EXPL_DOWN, EXPL_RIGHT, EXPL_HOR, EXPL_VERT,
+    EXPL_CENTER, EXPL_LEFT, EXPL_UP, EXPL_DOWN, EXPL_RIGHT,
     BONUS
 }
 
@@ -46,7 +46,6 @@ public class Grid : MonoBehaviour
         rt.localPosition = new Vector3(x * tileWidth, y * tileHeight);
         tile.GetComponent<Button>().onClick.AddListener(() =>
         {
-            SetTile(x, y, SpriteType.BIGBOMB);
             model.PlaceBomb(x, y);
         });
         tiles[x][y] = tile;
