@@ -3,17 +3,21 @@ using UnityEngine.UI;
 
 public class Grid : MonoBehaviour {
 
-    const int width = 7;
-    const int height = 7;
+    const int width = 9;
+    const int height = 9;
+    const int tileWidth = 32;
+    const int tileHeight = 32;
     GameObject self;
     GameObject tilePrefab;
 
     GameObject[][] tiles;
+    Sprite[] spritesheet;
 
     void Start() {
         self = GameObject.Find("Canvas");
         tilePrefab = Resources.Load<GameObject>("Tile");
         tiles = new GameObject[width][];
+        spritesheet = Resources.LoadAll<Sprite>("Spritesheet");
         for (int i = 0; i < width; i++)
         {
             tiles[i] = new GameObject[height];
@@ -26,8 +30,9 @@ public class Grid : MonoBehaviour {
         GameObject tile = Instantiate(tilePrefab);
         tile.transform.SetParent(self.transform, true);
         RectTransform rt = tile.GetComponent<RectTransform>();
-        rt.localPosition = new Vector3(x * 30, y * 30);
-        tile.GetComponent<Image>().color = new Color((float)(1.0 / 7.0 * x), (float)(1.0 / 7.0 * y), 0);
+        rt.localPosition = new Vector3(x * tileWidth, y * tileHeight);
+        tile.GetComponent<Image>().color = new Color((float)(1.0 / width * x), (float)(1.0 / height * y), 0);
+        tile.GetComponent<Image>().overrideSprite = spritesheet[0];
         tile.GetComponent<Button>().onClick.AddListener(() =>
         {
             tile.GetComponent<Image>().color = new Color(0, 0, 0);
