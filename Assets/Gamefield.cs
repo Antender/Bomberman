@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public enum ObjectType
 {
-    SPACE, WALL, BRICKWALL, PERSON, BOMB, EXPLOSION, BONUS
+    SPACE, WALL, BRICKWALL, BOMB, EXPLOSION, BONUS
 }
 
 public class Gamefield : MonoBehaviour
@@ -36,6 +36,7 @@ public class Gamefield : MonoBehaviour
     {
         view.SetTile(x, y, SpriteType.EXPL_CENTER);
         field[x][y] = ObjectType.EXPLOSION;
+        expllist[new Point(x, y)] = new ExplosionState();
         bomblist[new Point(x, y)].exploded = true;
         Explode(x, y, -1, 0, force);
         Explode(x, y, 1, 0, force);
@@ -51,6 +52,7 @@ public class Gamefield : MonoBehaviour
         {
             ObjectType old = field[x][y];
             field[x][y] = ObjectType.EXPLOSION;
+            expllist[new Point(x, y)] = new ExplosionState();
             switch (old)
             {
                 case ObjectType.BOMB:
@@ -127,15 +129,31 @@ public class Gamefield : MonoBehaviour
         }
     }
 
+    void UpdateExplosions(float time)
+    {
+        foreach (var pos in expllist.Keys)
+        {
+            ExplosionState state = expllist[pos];
+            state.time -= time;
+            if (state.time < 0)
+            {
+                field[pos.x][pos.y] = ObjectType.SPACE;
+                view.SetTile(pos.x, pos.y, SpriteType.SPACE);
+                expllist.Remove(pos);
+            }
+        }
+    }
+
     public void PlaceBomb(int x, int y)
     {
         field[x][y] = ObjectType.BOMB;
-        bomblist.Add(new Point(x, y), new BombState());
+        bomblist[new Point(x, y)] = new BombState();
     }
 
     void Update()
     {
         UpdateBombs(Time.deltaTime);
+        UpdateExplosions(Time.deltaTime);
     }
 }
 
