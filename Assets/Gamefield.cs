@@ -16,8 +16,8 @@ public class Gamefield : MonoBehaviour
 
     ObjectType[][] field;
 
-    LinkedList<BombState> bomblist;
-    LinkedList<ExplosionState> expllist;
+    Dictionary<Point,BombState> bomblist;
+    Dictionary<Point,ExplosionState> expllist;
 
     void Start()
     {
@@ -28,20 +28,79 @@ public class Gamefield : MonoBehaviour
         {
             field[i] = new ObjectType[height];
         }
-        bomblist = new LinkedList<BombState>();
-        expllist = new LinkedList<ExplosionState>();
+        bomblist = new Dictionary<Point, BombState>();
+        expllist = new Dictionary<Point, ExplosionState>();
+    }
+
+    void Explode(int x, int y, int force)
+    {
+        view.SetTile(x, y, SpriteType.EXPL_CENTER);
+        field[x][y] = ObjectType.EXPLOSION;
+        bomblist[new Point(x, y)].exploded = true;
+        Explode(x, y, -1, 0, force);
+        Explode(x, y, 1, 0, force);
+        Explode(x, y, 0, 1, force);
+        Explode(x, y, 0, -1, force);
+    }
+
+    void Explode(int _x, int _y, int xdelta, int ydelta, int force)
+    {
+        int x = _x + xdelta;
+        int y = _y + ydelta;
+        if (x >= 0 && x < width && y >= 0 && y < height && field[x][y] != ObjectType.WALL)
+        {
+            ObjectType old = field[x][y];
+            field[x][y] = ObjectType.EXPLOSION;
+            switch (old)
+            {
+                case ObjectType.BOMB:
+                    if (!bomblist[new Point(x, y)].exploded)
+                    {
+                        Explode(x, y, 2);
+                    }
+                    break;
+                default:
+                    if (xdelta != 0)
+                    {
+                        if (xdelta > 0)
+                        {
+                            view.SetTile(x, y, SpriteType.EXPL_RIGHT);
+                        }
+                        else
+                        {
+                            view.SetTile(x, y, SpriteType.EXPL_LEFT);
+                        }
+                    }
+                    else
+                    {
+                        if (ydelta > 0)
+                        {
+                            view.SetTile(x, y, SpriteType.EXPL_UP);
+                        }
+                        else
+                        {
+                            view.SetTile(x, y, SpriteType.EXPL_DOWN);
+                        }
+                    }
+                    break;
+            }
+        }
+        force -= 1;
+        if (force > 0)
+        {
+            Explode(x, y, xdelta, ydelta, force);
+        }
     }
 
     void UpdateBombs(float delta)
     {
-        int removecount = 0;
-        foreach (BombState bomb in bomblist)
+        foreach (var pos in bomblist.Keys)
         {
+            BombState bomb = bomblist[pos];
             bomb.time -= delta;
             if (bomb.time < 0)
             {
-                view.SetTile(bomb.x, bomb.y, SpriteType.EXPL_CENTER);
-                removecount++;
+                Explode(pos.x, pos.y, 2);
             }
             else
             {
@@ -52,22 +111,26 @@ public class Gamefield : MonoBehaviour
                     bomb.state ^= 1;
                     switch (bomb.state)
                     {
-                        case 0: view.SetTile(bomb.x, bomb.y, SpriteType.BIGBOMB); break;
-                        case 1: view.SetTile(bomb.x, bomb.y, SpriteType.SMALLBOMB); break;
+                        case 0: view.SetTile(pos.x, pos.y, SpriteType.BIGBOMB); break;
+                        case 1: view.SetTile(pos.x, pos.y, SpriteType.SMALLBOMB); break;
                     }
                 }
             }
         }
-        for (int i = 0; i < removecount; i++)
+        foreach (var pos in bomblist.Keys)
         {
-            bomblist.RemoveLast();
+            var point = new Point(pos.x, pos.y);
+            if (bomblist[point].exploded)
+            {
+                bomblist.Remove(point);
+            }
         }
     }
 
     public void PlaceBomb(int x, int y)
     {
         field[x][y] = ObjectType.BOMB;
-        bomblist.AddFirst(new BombState(x, y));
+        bomblist.Add(new Point(x, y), new BombState());
     }
 
     void Update()
@@ -78,30 +141,37 @@ public class Gamefield : MonoBehaviour
 
 class BombState
 {
-    public int x;
-    public int y;
     public float time;
     public float lastswitch;
     public int state;
+    public bool exploded;
 
-    public BombState(int _x, int _y)
+    public BombState()
     {
-        x = _x;
-        y = _y;
         time = 3;
+        lastswitch = 0;
+        state = 0;
+        exploded = false;
     }
 }
 
 class ExplosionState
 {
-    public int x;
-    public int y;
     public float time;
 
-    public ExplosionState(int _x, int _y)
+    public ExplosionState()
+    {
+        time = 1;
+    }
+}
+
+struct Point
+{
+    public int x;
+    public int y;
+    public Point(int _x, int _y)
     {
         x = _x;
         y = _y;
-        time = 1;
     }
 }
