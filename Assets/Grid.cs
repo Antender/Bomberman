@@ -21,6 +21,9 @@ public class Grid : MonoBehaviour
     GameObject tilePrefab;
 
     GameObject[][] tiles;
+    GameObject hero;
+    int heroX;
+    int heroY;
     Sprite[] spritesheet;
 
 
@@ -36,6 +39,22 @@ public class Grid : MonoBehaviour
             tiles[i] = new GameObject[height];
         }
         AddTiles(width, height);
+        AddHeroTile();
+    }
+
+    void AddHeroTile()
+    {
+        GameObject tile = Instantiate(tilePrefab);
+        tile.transform.SetParent(self.transform, true);
+        RectTransform rt = tile.GetComponent<RectTransform>();
+        rt.localPosition = new Vector3(0, 0);
+        tile.GetComponent<Image>().overrideSprite = spritesheet[(int)SpriteType.PERSON];
+        hero = tile;
+    }
+
+    public void SetHeroPosition(int x, int y)
+    {
+        hero.GetComponent<RectTransform>().localPosition = new Vector3(x * tileWidth, y * tileHeight);
     }
 
     void AddTile(int x, int y)
